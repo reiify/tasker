@@ -1,3 +1,4 @@
+import { useAuthStore } from 'src/stores/authStore';
 import { defineRouter } from '#q-app/wrappers';
 import {
   createMemoryHistory,
@@ -16,7 +17,7 @@ import routes from './routes';
  * with the Router instance.
  */
 
-export default defineRouter(function (/* { store, ssrContext } */) {
+export default defineRouter(function ({ store /* ssrContext */ }) {
   const createHistory = process.env.SERVER
     ? createMemoryHistory
     : process.env.VUE_ROUTER_MODE === 'history'
@@ -31,6 +32,16 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     // quasar.conf.js -> build -> vueRouterMode
     // quasar.conf.js -> build -> publicPath
     history: createHistory(process.env.VUE_ROUTER_BASE),
+  });
+
+  const authStore = useAuthStore(store);
+
+  Router.beforeEach((to, from, next) => {
+    if (to.matched.some((record) => record.meta.requiresAuth) && !authStore.isAuthenticated) {
+      next({ path: '/auth' });
+    } else {
+      next();
+    }
   });
 
   return Router;

@@ -1,43 +1,30 @@
-# Tasker (takser)
+# Tasker [demo](https://example.com)
 
-Personal Task Manager App
+## Personal Task Manager App
 
-## Install the dependencies
+### This is a demo project for a todo-app similar to Trello
 
-```bash
-yarn
-# or
-npm install
-```
+#### This project contains
 
-### Start the app in development mode (hot-code reloading, error reporting, etc.)
+- Simple Login page (saves user data in Pinia store)
+- Main page with a list of tasks:
+  - Title
+  - Description
+  - Deadline
+  - Status
+  - Filter and sort tasks by:
+    - Status
+    - Completion time
+- Add and Edit tasks with QDialog
+- You can drag and drop tasks
+- Pagination
+- Notifications with Quasar Notify
+- Responsible design
+- Change theme (dark/light)
 
-```bash
-quasar dev
-```
+#### Technologies
 
-### Lint the files
-
-```bash
-yarn lint
-# or
-npm run lint
-```
-
-### Format the files
-
-```bash
-yarn format
-# or
-npm run format
-```
-
-### Build the app for production
-
-```bash
-quasar build
-```
-
-### Customize the configuration
-
-See [Configuring quasar.config.js](https://v2.quasar.dev/quasar-cli-vite/quasar-config-js).
+- Vue 3
+- Quasar Framework
+- Pinia
+- TypeScript
