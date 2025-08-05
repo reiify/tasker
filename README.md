@@ -1,10 +1,8 @@
-# Tasker [demo](https://example.com)
+# [Tasker - Personal Task Manager App](https://takser-krei.vercel.app)
 
-## Personal Task Manager App
+## This is a demo project for a todo-app similar to Trello
 
-### This is a demo project for a todo-app similar to Trello
-
-#### This project contains
+### This project contains
 
 - Simple Login page (saves user data in Pinia store)
 - Main page with a list of tasks:
@@ -22,7 +20,7 @@
 - Responsible design
 - Change theme (dark/light)
 
-#### Technologies
+### Technologies
 
 - Vue 3
 - Quasar Framework
