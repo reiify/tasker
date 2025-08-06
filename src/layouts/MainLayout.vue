@@ -1,22 +1,86 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-header elevated>
+    <q-header>
       <q-toolbar>
-        <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
+        <q-toolbar-title> Tasker </q-toolbar-title>
 
-        <q-toolbar-title> Quasar App </q-toolbar-title>
+        <q-avatar icon="account_circle" color="negative">
+          <q-menu anchor="bottom left" :offset="[0, 4]" auto-close class="no-shadow non-selectable">
+            <q-list bordered class="rounded-borders">
+              <q-item>
+                <q-item-section avatar>
+                  <q-avatar color="negative" text-color="white">
+                    {{ useStore.currentUser?.name[0] }}
+                  </q-avatar>
+                </q-item-section>
 
-        <div>Quasar v{{ $q.version }}</div>
+                <q-item-section>
+                  <q-item-label lines="1"> {{ useStore.currentUser?.name }} </q-item-label>
+                  <q-item-label lines="1"> {{ useStore.currentUser?.email }} </q-item-label>
+                </q-item-section>
+              </q-item>
+
+              <q-separator inset />
+
+              <q-item-label header>Тема</q-item-label>
+              <q-item clickable @click="setTheme('light')">
+                <q-item-section side>
+                  <q-icon name="light_mode" />
+                </q-item-section>
+
+                <q-item-section>
+                  <q-item-label lines="1"> Дневная тема </q-item-label>
+                </q-item-section>
+
+                <q-item-section side top v-if="currentTheme === false">
+                  <q-icon name="check" right />
+                </q-item-section>
+              </q-item>
+
+              <q-item clickable @click="setTheme('dark')">
+                <q-item-section side>
+                  <q-icon name="dark_mode" />
+                </q-item-section>
+
+                <q-item-section>
+                  <q-item-label lines="1"> Тёмная тема </q-item-label>
+                </q-item-section>
+
+                <q-item-section side top v-if="currentTheme === true">
+                  <q-icon name="check" right />
+                </q-item-section>
+              </q-item>
+
+              <q-item clickable @click="setTheme('auto')">
+                <q-item-section side>
+                  <q-icon name="contrast" />
+                </q-item-section>
+
+                <q-item-section>
+                  <q-item-label lines="1"> Как в системе </q-item-label>
+                </q-item-section>
+
+                <q-item-section side top v-if="currentTheme === 'auto'">
+                  <q-icon name="check" right />
+                </q-item-section>
+              </q-item>
+
+              <q-separator inset />
+
+              <q-item clickable v-close-popup class="text-negative" @click="logout">
+                <q-item-section avatar>
+                  <q-icon color="negative" name="logout" />
+                </q-item-section>
+
+                <q-item-section>
+                  <q-item-label> Выйти </q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-menu>
+        </q-avatar>
       </q-toolbar>
     </q-header>
-
-    <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
-      <q-list>
-        <q-item-label header> Essential Links </q-item-label>
-
-        <EssentialLink v-for="link in linksList" :key="link.title" v-bind="link" />
-      </q-list>
-    </q-drawer>
 
     <q-page-container>
       <router-view />
@@ -25,57 +89,45 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import EssentialLink, { type EssentialLinkProps } from 'components/EssentialLink.vue';
+import { useQuasar } from 'quasar';
+import { watch, ref } from 'vue';
+import { useAuthStore } from 'src/stores/authStore';
+import { useRouter } from 'vue-router';
 
-const linksList: EssentialLinkProps[] = [
-  {
-    title: 'Docs',
-    caption: 'quasar.dev',
-    icon: 'school',
-    link: 'https://quasar.dev',
-  },
-  {
-    title: 'Github',
-    caption: 'github.com/quasarframework',
-    icon: 'code',
-    link: 'https://github.com/quasarframework',
-  },
-  {
-    title: 'Discord Chat Channel',
-    caption: 'chat.quasar.dev',
-    icon: 'chat',
-    link: 'https://chat.quasar.dev',
-  },
-  {
-    title: 'Forum',
-    caption: 'forum.quasar.dev',
-    icon: 'record_voice_over',
-    link: 'https://forum.quasar.dev',
-  },
-  {
-    title: 'Twitter',
-    caption: '@quasarframework',
-    icon: 'rss_feed',
-    link: 'https://twitter.quasar.dev',
-  },
-  {
-    title: 'Facebook',
-    caption: '@QuasarFramework',
-    icon: 'public',
-    link: 'https://facebook.quasar.dev',
-  },
-  {
-    title: 'Quasar Awesome',
-    caption: 'Community Quasar projects',
-    icon: 'favorite',
-    link: 'https://awesome.quasar.dev',
-  },
-];
+const $q = useQuasar();
+const currentTheme = ref($q.dark.mode);
+const router = useRouter();
 
-const leftDrawerOpen = ref(false);
+const useStore = useAuthStore();
+const logout = () => {
+  useStore.logoutUser();
 
-function toggleLeftDrawer() {
-  leftDrawerOpen.value = !leftDrawerOpen.value;
-}
+  $q.notify({
+    message: 'Вы вышли из системы',
+    color: 'positive',
+  });
+
+  void router.push('/auth');
+};
+
+watch(
+  () => $q.dark.mode,
+  (val) => {
+    currentTheme.value = val;
+  },
+);
+
+const setTheme = (val: string) => {
+  if (val === 'auto') {
+    $q.dark.set(val);
+    return;
+  } else if (val === 'dark') {
+    $q.dark.set(true);
+    return;
+  } else if (val === 'light') {
+    $q.dark.set(false);
+    return;
+  }
+  localStorage.setItem('theme', val);
+};
 </script>

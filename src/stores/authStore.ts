@@ -21,7 +21,29 @@ export const useAuthStore = defineStore('auth', {
   }),
 
   actions: {
+    checkEmailExists(email: string): boolean {
+      const emailExists = this.users.some(
+        (user) => user.email.toLowerCase() === email.toLowerCase(),
+      );
+      const defaultEmailExists = this.defaultUser.email.toLowerCase() === email.toLowerCase();
+
+      return emailExists || defaultEmailExists;
+    },
+
+    checkUsernameExists(name: string): boolean {
+      const nameExists = this.users.some((user) => user.name.toLowerCase() === name.toLowerCase());
+      const defaultNameExists = this.defaultUser.name.toLowerCase() === name.toLowerCase();
+
+      return nameExists || defaultNameExists;
+    },
+
     registerUser(user: User) {
+      if (this.checkEmailExists(user.email))
+        return { success: false, error: 'Пользователь с таким email уже существует' };
+
+      if (this.checkUsernameExists(user.name))
+        return { success: false, error: 'Пользователь с таким именем уже существует' };
+
       this.users.push(user);
       this.currentUser = user;
       this.isAuthenticated = true;
@@ -29,7 +51,7 @@ export const useAuthStore = defineStore('auth', {
       console.log('Пользователь зарегистрирован:', user);
       console.log('Все пользователи:', this.users);
 
-      return true;
+      return { success: true };
     },
 
     loginUser(loginIdentifier: string, password: string) {

@@ -1,8 +1,10 @@
 export interface Todo {
   id: number;
-  content: string;
-}
-
-export interface Meta {
-  totalCount: number;
+  creator: string;
+  title: string;
+  description?: string;
+  status: 'completed' | 'wip' | 'notStarted';
+  deadline?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }

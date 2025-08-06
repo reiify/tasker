@@ -4,21 +4,16 @@
 
 ### This project contains
 
-- Simple Login page (saves user data in Pinia store)
-- Main page with a list of tasks:
-  - Title
-  - Description
-  - Deadline
-  - Status
-  - Filter and sort tasks by:
-    - Status
-    - Completion time
-- Add and Edit tasks with QDialog
-- You can drag and drop tasks
-- Pagination
 - Notifications with Quasar Notify
 - Responsible design
 - Change theme (dark/light)
+- Simple Login page
+  - Register and/or Login
+  - Validations
+  - Middleware
+- Main page
+  - Toggle theme
+  - Logout
 
 ### Technologies
 

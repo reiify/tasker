@@ -12,7 +12,10 @@
         type="email"
         placeholder="Введите e-mail"
         v-model="email"
-        :rules="[(val, rules) => rules.email(val) || 'Пожалуйста, введите правильный адрес почты.']"
+        :rules="[
+          (val, rules) => rules.email(val) || 'Пожалуйста, введите правильный адрес почты.',
+          (val) => !authStore.checkEmailExists(val) || 'Пользователь с таким email уже существует',
+        ]"
         lazy-rules
       />
 
@@ -29,6 +32,8 @@
           (val) => !!val || 'Поле обязательно для заполнения',
           (val) =>
             /^[a-zA-Z0-9_]+$/.test(val) || 'Только латинские буквы, цифры и нижнее подчеркивание',
+          (val) =>
+            !authStore.checkUsernameExists(val) || 'Пользователь с таким именем уже существует',
         ]"
         lazy-rules
       />
@@ -88,9 +93,12 @@
         Регистрация
       </q-btn>
 
-      <router-link to="/auth/login" class="text-dark" style="text-decoration: none">
-        Уже есть аккаунт?
-        <span class="text-primary cursor-pointer">Войти</span>
+      <router-link
+        to="/auth/login"
+        class="text-primary cursor-pointer"
+        style="text-decoration: none"
+      >
+        Уже есть аккаунт? Войти
       </router-link>
     </q-form>
   </q-card-section>
@@ -100,6 +108,7 @@
 import { ref } from 'vue';
 import { useAuthStore } from '../stores/authStore';
 import { useQuasar } from 'quasar';
+import { useRouter } from 'vue-router';
 
 const $q = useQuasar();
 const authStore = useAuthStore();
@@ -111,6 +120,8 @@ const name = ref('');
 const password = ref('');
 const confirmPassword = ref('');
 
+const router = useRouter();
+
 const register = () => {
   if (!email.value || !name.value || !password.value || password.value !== confirmPassword.value) {
     $q.notify({
@@ -118,6 +129,7 @@ const register = () => {
       message: 'Пожалуйста, заполните все поля корректно',
       icon: 'warning',
     });
+
     return;
   }
 
@@ -129,7 +141,7 @@ const register = () => {
 
   const result = authStore.registerUser(user);
 
-  if (result) {
+  if (result.success) {
     $q.notify({
       color: 'positive',
       message: 'Регистрация прошла успешно!',
@@ -140,6 +152,14 @@ const register = () => {
     name.value = '';
     password.value = '';
     confirmPassword.value = '';
+
+    void router.push('/auth/login');
+  } else {
+    $q.notify({
+      color: 'negative',
+      message: result.error || 'Ошибка регистрации',
+      icon: 'error',
+    });
   }
 };
 </script>

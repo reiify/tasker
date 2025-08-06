@@ -50,9 +50,12 @@
         Войти
       </q-btn>
 
-      <router-link to="/auth/register" class="text-dark" style="text-decoration: none">
-        Нет аккаунта?
-        <span class="text-primary cursor-pointer">Создать аккаунт</span>
+      <router-link
+        to="/auth/register"
+        class="text-primary cursor-pointer"
+        style="text-decoration: none"
+      >
+        Нет аккаунта? Создать аккаунт
       </router-link>
     </q-form>
   </q-card-section>
