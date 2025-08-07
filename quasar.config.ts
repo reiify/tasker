@@ -95,7 +95,7 @@ export default defineConfig((/* ctx */) => {
       // you can manually specify Quasar components/directives to be available everywhere:
       //
       // components: [],
-      directives: ['TouchPan'],
+      // directives: [],
 
       // Quasar plugins
       plugins: ['Notify'],

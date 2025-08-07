@@ -52,7 +52,9 @@
         :dateFilter="dateFilter"
         @moveList="handleMoveList"
         class="list-item"
-      >
+      />
+
+      <q-card v-if="showNewListForm" class="new-list-form">
         <q-card-section>
           <q-input
             v-model="newListName"
@@ -73,7 +75,7 @@
             :disable="!newListName"
           />
         </q-card-actions>
-      </ListComponent>
+      </q-card>
     </div>
   </q-page>
 </template>

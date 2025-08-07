@@ -4,6 +4,9 @@
     flat
     class="cursor-pointer card-item q-mb-sm"
     @click="openCardDialog"
+    draggable="true"
+    @dragstart="onDragStart"
+    @dragend="onDragEnd"
     v-touch-pan.mouse.prevent="onPan"
     :class="{ 'card-dragging': isDragging }"
     :style="dragStyle"
@@ -255,6 +258,34 @@ function deleteCard() {
   showDialog.value = false;
 }
 
+function onDragStart(event: DragEvent) {
+  if (event.dataTransfer) {
+    event.dataTransfer.setData('text/plain', card.value.id.toString());
+    event.dataTransfer.setData(
+      'application/json',
+      JSON.stringify({
+        cardId: card.value.id,
+        listId: props.listId,
+      }),
+    );
+    event.dataTransfer.effectAllowed = 'move';
+
+    document.body.classList.add('dragging-card');
+
+    isDragging.value = true;
+  }
+}
+
+function onDragEnd(/* event: DragEvent */) {
+  isDragging.value = false;
+
+  document.body.classList.remove('dragging-card');
+
+  document.querySelectorAll('.list-cards-container').forEach((el) => {
+    el.classList.remove('drop-target');
+  });
+}
+
 function onPan(event: {
   evt?: Event;
   touch?: boolean;
@@ -268,6 +299,10 @@ function onPan(event: {
   offset?: { x?: number; y?: number };
   delta?: { x?: number; y?: number };
 }) {
+  if (event.mouse) return;
+
+  if (!event.touch) return;
+
   if (event.isFirst) {
     isDragging.value = true;
     startPosition.x = event.position?.left || 0;
@@ -280,25 +315,30 @@ function onPan(event: {
     if (event.evt) {
       event.evt.stopPropagation();
     }
+
+    const cardElement = event.evt?.target as HTMLElement;
+    if (cardElement) {
+      const cardRect = cardElement.closest('.card-item')?.getBoundingClientRect();
+      if (cardRect) {
+        cardElement.closest('.card-item')?.classList.add('card-dragging-mobile');
+      }
+    }
   } else if (isDragging.value && event.position) {
     dragPosition.x = (event.position.left || 0) - startPosition.x;
     dragPosition.y = (event.position.top || 0) - startPosition.y;
 
     if (event.evt) {
-      let mouseX = 0;
-      let mouseY = 0;
+      let touchX = 0;
+      let touchY = 0;
 
-      if (event.evt instanceof MouseEvent) {
-        mouseX = event.evt.clientX;
-        mouseY = event.evt.clientY;
-      } else if (event.evt instanceof TouchEvent) {
-        mouseX = event.evt.touches?.[0]?.clientX || 0;
-        mouseY = event.evt.touches?.[0]?.clientY || 0;
+      if (event.evt instanceof TouchEvent) {
+        touchX = event.evt.touches?.[0]?.clientX || 0;
+        touchY = event.evt.touches?.[0]?.clientY || 0;
       }
 
-      const elementsUnderCursor = document.elementsFromPoint(mouseX, mouseY);
+      const elementsUnderTouch = document.elementsFromPoint(touchX, touchY);
 
-      const listContainer = elementsUnderCursor.find((el) =>
+      const listContainer = elementsUnderTouch.find((el) =>
         el.classList.contains('list-cards-container'),
       );
 
@@ -308,6 +348,36 @@ function onPan(event: {
 
       if (listContainer) {
         listContainer.classList.add('drop-target');
+
+        const mouseY = touchY;
+        const cardElements = listContainer.querySelectorAll('.card-item');
+
+        document.querySelectorAll('.card-insert-indicator').forEach((el) => el.remove());
+
+        if (cardElements.length > 0) {
+          let insertBefore = null;
+          let minDistance = Number.MAX_VALUE;
+
+          cardElements.forEach((card) => {
+            const rect = card.getBoundingClientRect();
+            const cardCenter = rect.top + rect.height / 2;
+            const distance = Math.abs(cardCenter - mouseY);
+
+            if (distance < minDistance) {
+              minDistance = distance;
+              insertBefore = mouseY < cardCenter ? card : card.nextElementSibling;
+            }
+          });
+
+          const indicator = document.createElement('div');
+          indicator.className = 'card-insert-indicator';
+
+          if (insertBefore) {
+            listContainer.insertBefore(indicator, insertBefore);
+          } else {
+            listContainer.appendChild(indicator);
+          }
+        }
       }
     }
   }
@@ -319,34 +389,41 @@ function onPan(event: {
 
     document.body.classList.remove('dragging-card');
 
+    document.querySelectorAll('.card-dragging-mobile').forEach((el) => {
+      el.classList.remove('card-dragging-mobile');
+    });
+
     document.querySelectorAll('.list-cards-container').forEach((el) => {
       el.classList.remove('drop-target');
     });
 
-    if (event.evt) {
-      let mouseX = 0;
-      let mouseY = 0;
+    document.querySelectorAll('.card-insert-indicator').forEach((el) => el.remove());
 
-      if (event.evt instanceof MouseEvent) {
-        mouseX = event.evt.clientX;
-        mouseY = event.evt.clientY;
-      } else if (event.evt instanceof TouchEvent) {
-        mouseX = event.evt.changedTouches?.[0]?.clientX || 0;
-        mouseY = event.evt.changedTouches?.[0]?.clientY || 0;
+    if (event.evt) {
+      let touchX = 0;
+      let touchY = 0;
+
+      if (event.evt instanceof TouchEvent) {
+        touchX = event.evt.changedTouches?.[0]?.clientX || 0;
+        touchY = event.evt.changedTouches?.[0]?.clientY || 0;
       }
 
-      const elementsUnderCursor = document.elementsFromPoint(mouseX, mouseY);
+      const elementsUnderTouch = document.elementsFromPoint(touchX, touchY);
 
-      const listContainer = elementsUnderCursor.find((el) =>
+      const listContainer = elementsUnderTouch.find((el) =>
         el.classList.contains('list-cards-container'),
       );
 
       if (listContainer) {
         const listComponent = listContainer.closest('.list-item');
         if (listComponent) {
+          const listId = listComponent.getAttribute('data-list-id');
+
           emit('moveCard', {
             cardId: card.value.id,
+            targetListId: listId ? parseInt(listId) : undefined,
             event: event,
+            touchY: touchY,
           });
         }
       }
@@ -367,6 +444,7 @@ function onPan(event: {
     box-shadow 0.2s;
   position: relative;
   z-index: 1;
+  cursor: grab;
 }
 
 .card-item:hover {
@@ -380,6 +458,13 @@ function onPan(event: {
   pointer-events: none;
 }
 
+.card-dragging-mobile {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  transform: scale(1.02);
+  opacity: 0.9;
+}
+
 :global(.dragging-card) {
   cursor: grabbing !important;
 }
@@ -387,5 +472,26 @@ function onPan(event: {
 :global(.drop-target) {
   background-color: rgba(25, 118, 210, 0.1) !important;
   transition: background-color 0.2s ease;
+}
+
+:global(.card-insert-indicator) {
+  height: 3px;
+  background-color: #1976d2;
+  margin: 4px 0;
+  border-radius: 3px;
+  animation: pulse 1.5s infinite;
+  width: 100%;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
 }
 </style>
