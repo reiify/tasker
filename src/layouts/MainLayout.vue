@@ -1,10 +1,14 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-header>
+    <q-header class="q-px-md">
       <q-toolbar>
         <q-toolbar-title> Tasker </q-toolbar-title>
 
-        <q-avatar icon="account_circle" color="negative">
+        <q-space />
+
+        <q-avatar color="negative" text-color="white" class="cursor-pointer">
+          <span class="non-selectable content-center">{{ useStore.currentUser?.name[0] }}</span>
+
           <q-menu anchor="bottom left" :offset="[0, 4]" auto-close class="no-shadow non-selectable">
             <q-list bordered class="rounded-borders">
               <q-item>
@@ -29,7 +33,7 @@
                 </q-item-section>
 
                 <q-item-section>
-                  <q-item-label lines="1"> Дневная тема </q-item-label>
+                  <q-item-label lines="1"> Светлая тема </q-item-label>
                 </q-item-section>
 
                 <q-item-section side top v-if="currentTheme === false">
@@ -68,7 +72,7 @@
               <q-separator inset />
 
               <q-item clickable v-close-popup class="text-negative" @click="logout">
-                <q-item-section avatar>
+                <q-item-section side>
                   <q-icon color="negative" name="logout" />
                 </q-item-section>
 
